@@ -92,9 +92,9 @@ class Blockchain{
   } 
 
   // validate block
-  validateBlock(blockHeight){
+  async validateBlock(blockHeight){
     // get block object
-    let block = this.getBlock(blockHeight);
+    let block = await this.getBlock(blockHeight);
     // get block hash
     let blockHash = block.hash;
     // remove block hash to test block integrity
@@ -111,51 +111,66 @@ class Blockchain{
   }
 
   // Validate blockchain
-  validateChain(){
+  async validateChain(){
+    let height = await this.getBlockHeight();
     let errorLog = [];
-    for (var i = 0; i < this.chain.length-1; i++) {
+    for (var i = 0; i < height; i++) {
       // validate block
-      if (!this.validateBlock(i))errorLog.push(i);
+      let validateBlockResult = await this.validateBlock(i);
+      if (!validateBlockResult){
+        errorLog.push(i);
+      }
       // compare blocks hash link
-      let blockHash = this.chain[i].hash;
-      let previousHash = this.chain[i+1].previousBlockHash;
-      if (blockHash!==previousHash) {
+      //let blockHash = this.chain[i].hash;
+      //let previousHash = this.chain[i+1].previousBlockHash;
+      let block = await this.getBlock(i);
+      let blockHash = block.hash;
+      let nextBlock = await this.getBlock(i+1);
+      let nextBlockPreviousHash = nextBlock.previousBlockHash;
+      if (blockHash !== nextBlockPreviousHash) {
         errorLog.push(i);
       }
     }
+    //Still need to validate the last block, which is not validated in for loop above
+    let validateBlockResult = await this.validateBlock(height);
+    if (!validateBlockResult){
+      errorLog.push(i);
+    }
+    
     if (errorLog.length>0) {
       console.log('Block errors = ' + errorLog.length);
-      console.log('Blocks: '+errorLog);
-    } else {
+      console.log('Blocks: '+ errorLog);
+    } 
+    else {
       console.log('No errors detected');
     }
   }
 }
 
-// Add data to levelDB with key/value pair
-function addLevelDBData(key,value){
-  db.put(key, value, function(err) {
-    if (err) return console.log('Block ' + key + ' submission failed', err);
-  })
-}
-
-// Get data from levelDB with key
-function getLevelDBData(key){
-  db.get(key, function(err, value) {
-    if (err) return console.log('Not found!', err);
-    console.log('Value = ' + value);
-  })
-}
-
-// Add data to levelDB with value
-function addDataToLevelDB(value) {
-    let i = 0;
-    db.createReadStream().on('data', function(data) {
-          i++;
-        }).on('error', function(err) {
-            return console.log('Unable to read data stream!', err)
-        }).on('close', function() {
-          console.log('Block #' + i);
-          addLevelDBData(i, value);
-        });
-}
+//// Add data to levelDB with key/value pair
+//function addLevelDBData(key,value){
+//  db.put(key, value, function(err) {
+//    if (err) return console.log('Block ' + key + ' submission failed', err);
+//  })
+//}
+//
+//// Get data from levelDB with key
+//function getLevelDBData(key){
+//  db.get(key, function(err, value) {
+//    if (err) return console.log('Not found!', err);
+//    console.log('Value = ' + value);
+//  })
+//}
+//
+//// Add data to levelDB with value
+//function addDataToLevelDB(value) {
+//    let i = 0;
+//    db.createReadStream().on('data', function(data) {
+//          i++;
+//        }).on('error', function(err) {
+//            return console.log('Unable to read data stream!', err)
+//        }).on('close', function() {
+//          console.log('Block #' + i);
+//          addLevelDBData(i, value);
+//        });
+//}
