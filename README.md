@@ -59,3 +59,12 @@ for (var i = 0; i < inducedErrorBlocks.length; i++) {
 ```
 blockchain.validateChain();
 ```
+
+## My comment after finishing the assignment
+
+To test the features, simply run node simpleChain.js (We need to npm install crypto-js and level first)
+
+The test program is also written in this simpleChain.js.
+
+ 
+
